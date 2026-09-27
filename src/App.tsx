@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import mascot from './assets/mascot.png'
+import { CutePic } from './components/CutePic'
+import { Hanzi } from './components/Hanzi'
 import { topicById, topics, words, wordsForTopic, type TopicId, type Word } from './data/words'
 import { addStars, loadProgress, markKnown, setShowJyutping } from './lib/progress'
 import { buildQuestions, praiseForScore, type QuizMode } from './lib/quiz'
 import { speak, unlockSpeech } from './lib/speech'
+
+const choiceTones = ['peach', 'mint', 'sun', 'sky'] as const
 
 type View =
   | { name: 'home' }
@@ -30,8 +35,14 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="glow glow-a" />
-      <div className="glow glow-b" />
+      <div className="confetti" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
       {view.name === 'home' && (
         <HomeScreen
           known={progress.knownIds.length}
@@ -121,20 +132,19 @@ function HomeScreen({
         <p className="tagline">用廣東話聽、用繁體字認，識字好好玩。</p>
       </header>
       <div className="hero-card">
-        <div className="hero-char" aria-hidden="true">
-          字
-        </div>
+        <img className="hero-mascot" src={mascot} alt="字字樂吉祥物" />
         <div className="hero-copy">
+          <Hanzi char="字" size="md" tone="sun" />
           <strong>{words.length} 個常用字</strong>
           <span>家庭、動物、食物、天地……專為香港 K3 細路揀。</span>
         </div>
       </div>
       <div className="stats">
-        <div className="stat">
+        <div className="stat tone-peach">
           <b>{known}</b>
           <span>識咗嘅字</span>
         </div>
-        <div className="stat">
+        <div className="stat tone-sun">
           <b>{stars}</b>
           <span>累積星星</span>
         </div>
@@ -166,8 +176,8 @@ function TopicScreen({
   return (
     <section className="screen">
       <TopBar title="揀課題" onBack={onBack} />
-      <button className="topic-card all" type="button" onClick={() => onPick('all')}>
-        <span className="topic-emoji">🎲</span>
+      <button className="topic-card all tone-grape" type="button" onClick={() => onPick('all')}>
+        <CutePic name="game-die" emoji="🎲" label="全部字" className="topic-pic" />
         <span>
           <strong>全部字</strong>
           <small>隨機挑戰 {words.length} 個字</small>
@@ -184,7 +194,7 @@ function TopicScreen({
               type="button"
               onClick={() => onPick(topic.id)}
             >
-              <span className="topic-emoji">{topic.emoji}</span>
+              <CutePic name={topic.pic} emoji={topic.emoji} label={topic.name} className="topic-pic" />
               <strong>{topic.name}</strong>
               <small>
                 {topic.hint} · {known}/{list.length}
@@ -214,22 +224,22 @@ function ModeScreen({
     <section className="screen">
       <TopBar title={title} onBack={onBack} />
       <p className="lead">呢個課題有 {count} 個字，你想點玩？</p>
-      <button className="mode-card" type="button" onClick={() => onQuiz('listen')}>
-        <span className="mode-icon">🔊</span>
+      <button className="mode-card tone-sky" type="button" onClick={() => onQuiz('listen')}>
+        <CutePic name="speaker-high-volume" emoji="🔊" label="聽音認字" className="mode-pic" />
         <span>
           <strong>聽音認字</strong>
           <small>聽廣東話，揀返啱嗰個字</small>
         </span>
       </button>
-      <button className="mode-card" type="button" onClick={() => onQuiz('picture')}>
-        <span className="mode-icon">🖼️</span>
+      <button className="mode-card tone-mint" type="button" onClick={() => onQuiz('picture')}>
+        <CutePic name="framed-picture" emoji="🖼️" label="睇圖認字" className="mode-pic" />
         <span>
           <strong>睇圖認字</strong>
           <small>睇圖同意思，再揀漢字</small>
         </span>
       </button>
-      <button className="mode-card" type="button" onClick={onStudy}>
-        <span className="mode-icon">🃏</span>
+      <button className="mode-card tone-sun" type="button" onClick={onStudy}>
+        <CutePic name="bookmark-tabs" emoji="🃏" label="認讀卡" className="mode-pic" />
         <span>
           <strong>認讀卡</strong>
           <small>慢慢睇字、聽音、記拼音</small>
@@ -274,8 +284,8 @@ function StudyScreen({
     <section className="screen">
       <TopBar title="認讀卡" onBack={onBack} meta={`${index + 1} / ${cards.length}`} />
       <button className="flash-card" type="button" onClick={() => speak(word.say)}>
-        <span className="flash-emoji">{word.emoji}</span>
-        <span className="flash-char">{word.char}</span>
+        <CutePic name={word.pic} emoji={word.emoji} label={word.meaning} className="flash-pic" />
+        <Hanzi char={word.char} size="xl" tone="cream" />
         {showJyutping && <span className="flash-jyutping">{word.jyutping}</span>}
         <span className="flash-meaning">{word.meaning}</span>
         <span className="flash-hint">撳一下聽廣東話</span>
@@ -362,20 +372,25 @@ function QuizScreen({
       <div className="prompt">
         {mode === 'listen' ? (
           <button className="speaker" type="button" onClick={() => speak(question.correct.say)}>
-            <span>🔊</span>
+            <CutePic name="speaker-high-volume" emoji="🔊" label="聽" className="speaker-pic" />
             <strong>聽下係邊個字</strong>
             <small>撳喇叭再聽一次</small>
           </button>
         ) : (
           <div className="picture-prompt">
-            <span className="picture-emoji">{question.correct.emoji}</span>
+            <CutePic
+              name={question.correct.pic}
+              emoji={question.correct.emoji}
+              label={question.correct.meaning}
+              className="picture-pic"
+            />
             <strong>{question.correct.meaning}</strong>
             {showJyutping && <small>{question.correct.jyutping}</small>}
           </div>
         )}
       </div>
       <div className="choices">
-        {question.choices.map((word) => {
+        {question.choices.map((word, choiceIndex) => {
           const state =
             picked && word.id === question.correct.id
               ? 'right'
@@ -390,7 +405,7 @@ function QuizScreen({
               onClick={() => choose(word)}
               disabled={locked}
             >
-              <span className="choice-char">{word.char}</span>
+              <Hanzi char={word.char} size="lg" tone={choiceTones[choiceIndex % choiceTones.length]} />
             </button>
           )
         })}
@@ -419,7 +434,7 @@ function ResultScreen({
 
   return (
     <section className="screen result">
-      <div className="result-badge">{praise.emoji}</div>
+      <CutePic name={praise.pic} emoji={praise.emoji} label={praise.title} className="result-pic" />
       <h2>{praise.title}</h2>
       <p className="lead">{praise.line}</p>
       <div className="score-pill">

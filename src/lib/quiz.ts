@@ -35,8 +35,8 @@ export function buildQuestions(topicId: TopicId | 'all', count = 8): Question[] 
 
 export function praiseForScore(correct: number, total: number) {
   const ratio = total === 0 ? 0 : correct / total
-  if (ratio === 1) return { title: '滿分！', line: '你全部都識，好叻呀！', emoji: '🏆' }
-  if (ratio >= 0.75) return { title: '好叻呀！', line: '差唔多全中，繼續加油。', emoji: '🌟' }
-  if (ratio >= 0.5) return { title: '唔錯呀！', line: '再玩多次就更加叻。', emoji: '💪' }
-  return { title: '再試下啦', line: '慢慢嚟，識多幾個就得。', emoji: '🌈' }
+  if (ratio === 1) return { title: '滿分！', line: '你全部都識，好叻呀！', emoji: '🏆', pic: 'trophy' }
+  if (ratio >= 0.75) return { title: '好叻呀！', line: '差唔多全中，繼續加油。', emoji: '🌟', pic: 'glowing-star' }
+  if (ratio >= 0.5) return { title: '唔錯呀！', line: '再玩多次就更加叻。', emoji: '💪', pic: 'flexed-biceps' }
+  return { title: '再試下啦', line: '慢慢嚟，識多幾個就得。', emoji: '🌈', pic: 'rainbow' }
 }
