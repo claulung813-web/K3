@@ -1,15 +1,19 @@
+import { wordsForLevel, type Level } from '../data/words'
+
 const KEY = 'k3-zi-zi-lok'
 
 type Progress = {
   stars: number
   knownIds: string[]
   showJyutping: boolean
+  level: Level
 }
 
 const empty: Progress = {
   stars: 0,
   knownIds: [],
   showJyutping: true,
+  level: 3,
 }
 
 function read(): Progress {
@@ -21,6 +25,7 @@ function read(): Progress {
       stars: Number(parsed.stars) || 0,
       knownIds: Array.isArray(parsed.knownIds) ? parsed.knownIds : [],
       showJyutping: parsed.showJyutping !== false,
+      level: parsed.level === 2 ? 2 : 3,
     }
   } catch {
     return empty
@@ -56,4 +61,16 @@ export function setShowJyutping(show: boolean) {
   progress.showJyutping = show
   write(progress)
   return progress
+}
+
+export function setLevel(level: Level) {
+  const progress = read()
+  progress.level = level
+  write(progress)
+  return progress
+}
+
+export function knownCount(level: Level, knownIds: string[]) {
+  const allowed = new Set(wordsForLevel(level).map((word) => word.id))
+  return knownIds.filter((id) => allowed.has(id)).length
 }

@@ -21,6 +21,8 @@ export type Word = {
   topic: TopicId
 }
 
+export type Level = 2 | 3
+
 export type Topic = {
   id: TopicId
   name: string
@@ -29,6 +31,51 @@ export type Topic = {
   pic: string
   tone: string
 }
+
+const k2Ids = new Set([
+  'baa',
+  'maa',
+  'go',
+  'ze',
+  'ngo',
+  'nei',
+  'gaa',
+  'sau',
+  'ngaan',
+  'hau',
+  'ji',
+  'maau',
+  'gau',
+  'jyu',
+  'niu',
+  'tou',
+  'faan',
+  'seoi',
+  'naai',
+  'daan',
+  'tong',
+  'jat',
+  'jyut',
+  'faa',
+  'jyu5',
+  'sing',
+  'syu1',
+  'bat',
+  'hung',
+  'wong',
+  'laam',
+  'jat1',
+  'ji6',
+  'saam',
+  'sei',
+  'ng5',
+  'zau',
+  'sik',
+  'waan',
+  'siu',
+  'ce',
+  'mun',
+])
 
 export const topics: Topic[] = [
   { id: 'family', name: '家庭', hint: '屋企人', emoji: '🏠', pic: 'house-with-garden', tone: 'peach' },
@@ -58,12 +105,12 @@ export const words: Word[] = [
 
   { id: 'sau', char: '手', say: '手', jyutping: 'sau2', meaning: '手', emoji: '✋', pic: 'raised-hand', topic: 'body' },
   { id: 'goek', char: '腳', say: '腳', jyutping: 'goek3', meaning: '腳', emoji: '🦶', pic: 'foot', topic: 'body' },
-  { id: 'ngaan', char: '眼', say: '眼睛', jyutping: 'ngaan5', meaning: '眼睛', emoji: '👁️', pic: 'eye', topic: 'body' },
-  { id: 'ji', char: '耳', say: '耳朵', jyutping: 'ji5', meaning: '耳朵', emoji: '👂', pic: 'ear', topic: 'body' },
-  { id: 'hau', char: '口', say: '口', jyutping: 'hau2', meaning: '嘴巴', emoji: '👄', pic: 'mouth', topic: 'body' },
-  { id: 'bei', char: '鼻', say: '鼻子', jyutping: 'bei6', meaning: '鼻子', emoji: '👃', pic: 'nose', topic: 'body' },
+  { id: 'ngaan', char: '眼', say: '眼', jyutping: 'ngaan5', meaning: '眼', emoji: '👁️', pic: 'eye', topic: 'body' },
+  { id: 'ji', char: '耳', say: '耳仔', jyutping: 'ji5', meaning: '耳仔', emoji: '👂', pic: 'ear', topic: 'body' },
+  { id: 'hau', char: '口', say: '口', jyutping: 'hau2', meaning: '口', emoji: '👄', pic: 'mouth', topic: 'body' },
+  { id: 'bei', char: '鼻', say: '鼻哥', jyutping: 'bei6', meaning: '鼻哥', emoji: '👃', pic: 'nose', topic: 'body' },
   { id: 'tau', char: '頭', say: '頭', jyutping: 'tau4', meaning: '頭', emoji: '🧑', pic: 'person', topic: 'body' },
-  { id: 'ngaa', char: '牙', say: '牙齒', jyutping: 'ngaa4', meaning: '牙齒', emoji: '🦷', pic: 'tooth', topic: 'body' },
+  { id: 'ngaa', char: '牙', say: '牙', jyutping: 'ngaa4', meaning: '牙', emoji: '🦷', pic: 'tooth', topic: 'body' },
   { id: 'sam', char: '心', say: '心', jyutping: 'sam1', meaning: '心口', emoji: '❤️', pic: 'red-heart', topic: 'body' },
 
   { id: 'maau', char: '貓', say: '貓', jyutping: 'maau1', meaning: '貓貓', emoji: '🐱', pic: 'cat-face', topic: 'animals' },
@@ -83,10 +130,10 @@ export const words: Word[] = [
   { id: 'naai', char: '奶', say: '奶', jyutping: 'naai5', meaning: '牛奶', emoji: '🥛', pic: 'glass-of-milk', topic: 'food' },
   { id: 'seoi', char: '水', say: '水', jyutping: 'seoi2', meaning: '水', emoji: '💧', pic: 'droplet', topic: 'food' },
   { id: 'caa', char: '茶', say: '茶', jyutping: 'caa4', meaning: '茶', emoji: '🍵', pic: 'teacup-without-handle', topic: 'food' },
-  { id: 'coi', char: '菜', say: '菜', jyutping: 'coi3', meaning: '蔬菜', emoji: '🥬', pic: 'leafy-green', topic: 'food' },
+  { id: 'coi', char: '菜', say: '菜', jyutping: 'coi3', meaning: '菜', emoji: '🥬', pic: 'leafy-green', topic: 'food' },
   { id: 'gwo', char: '果', say: '生果', jyutping: 'gwo2', meaning: '生果', emoji: '🍎', pic: 'red-apple', topic: 'food' },
   { id: 'tong', char: '糖', say: '糖', jyutping: 'tong4', meaning: '糖', emoji: '🍬', pic: 'candy', topic: 'food' },
-  { id: 'beng', char: '餅', say: '餅', jyutping: 'beng2', meaning: '餅乾', emoji: '🍪', pic: 'cookie', topic: 'food' },
+  { id: 'beng', char: '餅', say: '餅', jyutping: 'beng2', meaning: '餅', emoji: '🍪', pic: 'cookie', topic: 'food' },
 
   { id: 'jat', char: '日', say: '太陽', jyutping: 'jat6', meaning: '太陽', emoji: '☀️', pic: 'sun', topic: 'nature' },
   { id: 'jyut', char: '月', say: '月亮', jyutping: 'jyut6', meaning: '月亮', emoji: '🌙', pic: 'crescent-moon', topic: 'nature' },
@@ -103,7 +150,7 @@ export const words: Word[] = [
   { id: 'syu1', char: '書', say: '書', jyutping: 'syu1', meaning: '書本', emoji: '📖', pic: 'open-book', topic: 'school' },
   { id: 'bat', char: '筆', say: '筆', jyutping: 'bat1', meaning: '筆', emoji: '✏️', pic: 'pencil', topic: 'school' },
   { id: 'zi', char: '紙', say: '紙', jyutping: 'zi2', meaning: '紙', emoji: '📄', pic: 'page-facing-up', topic: 'school' },
-  { id: 'hok', char: '學', say: '學習', jyutping: 'hok6', meaning: '學習', emoji: '🎒', pic: 'backpack', topic: 'school' },
+  { id: 'hok', char: '學', say: '讀書', jyutping: 'hok6', meaning: '讀書', emoji: '🎒', pic: 'backpack', topic: 'school' },
   { id: 'haau', char: '校', say: '學校', jyutping: 'haau6', meaning: '學校', emoji: '🏫', pic: 'school', topic: 'school' },
   { id: 'si', char: '師', say: '老師', jyutping: 'si1', meaning: '老師', emoji: '👩‍🏫', pic: 'woman-teacher', topic: 'school' },
   { id: 'jau', char: '友', say: '朋友', jyutping: 'jau5', meaning: '朋友', emoji: '🤝', pic: 'handshake', topic: 'school' },
@@ -130,14 +177,14 @@ export const words: Word[] = [
   { id: 'zau', char: '走', say: '走', jyutping: 'zau2', meaning: '行路', emoji: '🚶', pic: 'person-walking', topic: 'actions' },
   { id: 'paau', char: '跑', say: '跑', jyutping: 'paau2', meaning: '跑步', emoji: '🏃', pic: 'person-running', topic: 'actions' },
   { id: 'tiu', char: '跳', say: '跳', jyutping: 'tiu3', meaning: '跳高', emoji: '🤸', pic: 'person-cartwheeling', topic: 'actions' },
-  { id: 'hon', char: '看', say: '看', jyutping: 'hon3', meaning: '睇', emoji: '👀', pic: 'eyes', topic: 'actions' },
+  { id: 'hon', char: '看', say: '睇', jyutping: 'hon3', meaning: '睇', emoji: '👀', pic: 'eyes', topic: 'actions' },
   { id: 'teng', char: '聽', say: '聽', jyutping: 'teng1', meaning: '聽', emoji: '🎧', pic: 'headphone', topic: 'actions' },
   { id: 'sik', char: '食', say: '食', jyutping: 'sik6', meaning: '食嘢', emoji: '🍽️', pic: 'fork-and-knife-with-plate', topic: 'actions' },
-  { id: 'co5', char: '坐', say: '坐', jyutping: 'co5', meaning: '坐下', emoji: '🪑', pic: 'chair', topic: 'actions' },
-  { id: 'waan', char: '玩', say: '玩', jyutping: 'waan2', meaning: '玩遊戲', emoji: '🎮', pic: 'video-game', topic: 'actions' },
+  { id: 'co5', char: '坐', say: '坐低', jyutping: 'co5', meaning: '坐低', emoji: '🪑', pic: 'chair', topic: 'actions' },
+  { id: 'waan', char: '玩', say: '玩', jyutping: 'waan2', meaning: '玩', emoji: '🎮', pic: 'video-game', topic: 'actions' },
   { id: 'siu', char: '笑', say: '笑', jyutping: 'siu3', meaning: '笑', emoji: '😄', pic: 'grinning-face-with-smiling-eyes', topic: 'actions' },
 
-  { id: 'ce', char: '車', say: '車', jyutping: 'ce1', meaning: '汽車', emoji: '🚗', pic: 'automobile', topic: 'travel' },
+  { id: 'ce', char: '車', say: '車', jyutping: 'ce1', meaning: '車', emoji: '🚗', pic: 'automobile', topic: 'travel' },
   { id: 'syun', char: '船', say: '船', jyutping: 'syun4', meaning: '船', emoji: '🚢', pic: 'ship', topic: 'travel' },
   { id: 'fei', char: '飛', say: '飛', jyutping: 'fei1', meaning: '飛', emoji: '✈️', pic: 'airplane', topic: 'travel' },
   { id: 'gei', char: '機', say: '飛機', jyutping: 'gei1', meaning: '飛機', emoji: '🛫', pic: 'airplane-departure', topic: 'travel' },
@@ -146,9 +193,24 @@ export const words: Word[] = [
   { id: 'baa1', char: '巴', say: '巴士', jyutping: 'baa1', meaning: '巴士', emoji: '🚌', pic: 'bus', topic: 'travel' },
 ]
 
-export function wordsForTopic(topicId: TopicId | 'all'): Word[] {
-  if (topicId === 'all') return words
-  return words.filter((word) => word.topic === topicId)
+export function wordsForLevel(level: Level): Word[] {
+  if (level === 3) return words
+  return words.filter((word) => k2Ids.has(word.id))
+}
+
+export function wordsForTopic(topicId: TopicId | 'all', level: Level = 3): Word[] {
+  const pool = wordsForLevel(level)
+  if (topicId === 'all') return pool
+  return pool.filter((word) => word.topic === topicId)
+}
+
+export function topicsForLevel(level: Level): Topic[] {
+  return topics.filter((topic) => wordsForTopic(topic.id, level).length > 0)
+}
+
+export function topicHint(topic: Topic, level: Level): string {
+  if (topic.id === 'numbers') return level === 2 ? '1 到 5' : '1 到 10'
+  return topic.hint
 }
 
 export function topicById(topicId: TopicId): Topic {

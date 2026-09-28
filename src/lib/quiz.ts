@@ -1,4 +1,4 @@
-import { words, wordsForTopic, type TopicId, type Word } from '../data/words'
+import { wordsForLevel, wordsForTopic, type Level, type TopicId, type Word } from '../data/words'
 
 export type QuizMode = 'listen' | 'picture'
 
@@ -16,13 +16,14 @@ function shuffle<T>(items: T[]): T[] {
   return next
 }
 
-export function buildQuestions(topicId: TopicId | 'all', count = 8): Question[] {
-  const topicWords = wordsForTopic(topicId)
+export function buildQuestions(topicId: TopicId | 'all', level: Level = 3, count = 8): Question[] {
+  const topicWords = wordsForTopic(topicId, level)
+  const pool = wordsForLevel(level)
   const selected = shuffle(topicWords).slice(0, Math.min(count, topicWords.length))
 
   return selected.map((correct) => {
     const sameTopic = topicWords.filter((word) => word.id !== correct.id)
-    const extras = words.filter(
+    const extras = pool.filter(
       (word) => word.id !== correct.id && !sameTopic.some((item) => item.id === word.id),
     )
     const distractors = shuffle([...sameTopic, ...extras]).slice(0, 3)
@@ -31,6 +32,14 @@ export function buildQuestions(topicId: TopicId | 'all', count = 8): Question[] 
       choices: shuffle([correct, ...distractors]),
     }
   })
+}
+
+export function explainWrong(correct: Word, picked: Word) {
+  return {
+    title: '記住呢個字',
+    line: `你揀咗「${picked.char}」，唔啱。正確係「${correct.char}」，即係${correct.meaning}。`,
+    speak: `唔係${picked.say}呀。係${correct.say}。${correct.say}。`,
+  }
 }
 
 export function praiseForScore(correct: number, total: number) {

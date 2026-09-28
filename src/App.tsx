@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import mascot from './assets/mascot.png'
 import { CutePic } from './components/CutePic'
 import { Hanzi } from './components/Hanzi'
-import { topicById, topics, words, wordsForTopic, type TopicId, type Word } from './data/words'
-import { addStars, loadProgress, markKnown, setShowJyutping } from './lib/progress'
-import { buildQuestions, praiseForScore, type QuizMode } from './lib/quiz'
-import { speak, unlockSpeech } from './lib/speech'
+import { topicById, topicHint, topicsForLevel, wordsForLevel, wordsForTopic, type Level, type TopicId, type Word } from './data/words'
+import { addStars, knownCount, loadProgress, markKnown, setLevel, setShowJyutping } from './lib/progress'
+import { buildQuestions, explainWrong, praiseForScore, type QuizMode } from './lib/quiz'
+import { speak, speakWord, unlockSpeech } from './lib/speech'
 
 const choiceTones = ['peach', 'mint', 'sun', 'sky'] as const
 
@@ -45,16 +45,20 @@ export default function App() {
       </div>
       {view.name === 'home' && (
         <HomeScreen
-          known={progress.knownIds.length}
+          knownIds={progress.knownIds}
           stars={progress.stars}
           showJyutping={progress.showJyutping}
           onToggleJyutping={() => setProgress(setShowJyutping(!progress.showJyutping))}
-          onStart={start}
+          onPickLevel={(level) => {
+            setProgress(setLevel(level))
+            start()
+          }}
           onHelp={() => setHelpOpen(true)}
         />
       )}
       {view.name === 'topics' && (
         <TopicScreen
+          level={progress.level}
           knownIds={progress.knownIds}
           onBack={() => setView({ name: 'home' })}
           onPick={(topicId) => setView({ name: 'modes', topicId })}
@@ -62,6 +66,7 @@ export default function App() {
       )}
       {view.name === 'modes' && (
         <ModeScreen
+          level={progress.level}
           topicId={view.topicId}
           onBack={() => setView({ name: 'topics' })}
           onStudy={() => setView({ name: 'study', topicId: view.topicId })}
@@ -70,6 +75,7 @@ export default function App() {
       )}
       {view.name === 'study' && (
         <StudyScreen
+          level={progress.level}
           topicId={view.topicId}
           showJyutping={progress.showJyutping}
           onBack={() => setView({ name: 'modes', topicId: view.topicId })}
@@ -78,6 +84,7 @@ export default function App() {
       )}
       {view.name === 'quiz' && (
         <QuizScreen
+          level={progress.level}
           topicId={view.topicId}
           mode={view.mode}
           showJyutping={progress.showJyutping}
@@ -110,24 +117,26 @@ export default function App() {
 }
 
 function HomeScreen({
-  known,
+  knownIds,
   stars,
   showJyutping,
   onToggleJyutping,
-  onStart,
+  onPickLevel,
   onHelp,
 }: {
-  known: number
+  knownIds: string[]
   stars: number
   showJyutping: boolean
   onToggleJyutping: () => void
-  onStart: () => void
+  onPickLevel: (level: Level) => void
   onHelp: () => void
 }) {
+  const k2 = wordsForLevel(2)
+  const k3 = wordsForLevel(3)
   return (
     <section className="screen home">
       <header className="brand">
-        <p className="eyebrow">香港幼稚園 K3</p>
+        <p className="eyebrow">香港幼稚園</p>
         <h1>字字樂</h1>
         <p className="tagline">用廣東話聽、用繁體字認，識字好好玩。</p>
       </header>
@@ -135,13 +144,13 @@ function HomeScreen({
         <img className="hero-mascot" src={mascot} alt="字字樂吉祥物" />
         <div className="hero-copy">
           <Hanzi char="字" size="md" tone="sun" />
-          <strong>{words.length} 個常用字</strong>
-          <span>家庭、動物、食物、天地……專為香港 K3 細路揀。</span>
+          <strong>K2 低班 · K3 高班</strong>
+          <span>家庭、動物、食物、天地……專為香港幼稚園細路揀。</span>
         </div>
       </div>
       <div className="stats">
         <div className="stat tone-peach">
-          <b>{known}</b>
+          <b>{knownCount(3, knownIds)}</b>
           <span>識咗嘅字</span>
         </div>
         <div className="stat tone-sun">
@@ -149,9 +158,18 @@ function HomeScreen({
           <span>累積星星</span>
         </div>
       </div>
-      <button className="btn primary xl" type="button" onClick={onStart}>
-        開始認字
-      </button>
+      <div className="class-pick">
+        <button className="class-card tone-mint" type="button" onClick={() => onPickLevel(2)}>
+          <strong>K2 低班</strong>
+          <small>淺字慢慢嚟 · {k2.length} 個字</small>
+          <span>識咗 {knownCount(2, knownIds)} 個</span>
+        </button>
+        <button className="class-card tone-sky" type="button" onClick={() => onPickLevel(3)}>
+          <strong>K3 高班</strong>
+          <small>多啲常用字 · {k3.length} 個字</small>
+          <span>識咗 {knownCount(3, knownIds)} 個</span>
+        </button>
+      </div>
       <div className="home-row">
         <button className="btn ghost" type="button" onClick={onHelp}>
           點樣玩
@@ -165,27 +183,30 @@ function HomeScreen({
 }
 
 function TopicScreen({
+  level,
   knownIds,
   onBack,
   onPick,
 }: {
+  level: Level
   knownIds: string[]
   onBack: () => void
   onPick: (topicId: TopicId | 'all') => void
 }) {
+  const all = wordsForTopic('all', level)
   return (
     <section className="screen">
-      <TopBar title="揀課題" onBack={onBack} />
+      <TopBar title={level === 2 ? 'K2 揀課題' : 'K3 揀課題'} onBack={onBack} />
       <button className="topic-card all tone-grape" type="button" onClick={() => onPick('all')}>
         <CutePic name="game-die" emoji="🎲" label="全部字" className="topic-pic" />
         <span>
           <strong>全部字</strong>
-          <small>隨機挑戰 {words.length} 個字</small>
+          <small>隨機挑戰 {all.length} 個字</small>
         </span>
       </button>
       <div className="topic-grid">
-        {topics.map((topic) => {
-          const list = wordsForTopic(topic.id)
+        {topicsForLevel(level).map((topic) => {
+          const list = wordsForTopic(topic.id, level)
           const known = list.filter((word) => knownIds.includes(word.id)).length
           return (
             <button
@@ -197,7 +218,7 @@ function TopicScreen({
               <CutePic name={topic.pic} emoji={topic.emoji} label={topic.name} className="topic-pic" />
               <strong>{topic.name}</strong>
               <small>
-                {topic.hint} · {known}/{list.length}
+                {topicHint(topic, level)} · {known}/{list.length}
               </small>
             </button>
           )
@@ -208,18 +229,20 @@ function TopicScreen({
 }
 
 function ModeScreen({
+  level,
   topicId,
   onBack,
   onStudy,
   onQuiz,
 }: {
+  level: Level
   topicId: TopicId | 'all'
   onBack: () => void
   onStudy: () => void
   onQuiz: (mode: QuizMode) => void
 }) {
   const title = topicId === 'all' ? '全部字' : topicById(topicId).name
-  const count = wordsForTopic(topicId).length
+  const count = wordsForTopic(topicId, level).length
   return (
     <section className="screen">
       <TopBar title={title} onBack={onBack} />
@@ -238,7 +261,16 @@ function ModeScreen({
           <small>睇圖同意思，再揀漢字</small>
         </span>
       </button>
-      <button className="mode-card tone-sun" type="button" onClick={onStudy}>
+      <button
+        className="mode-card tone-sun"
+        type="button"
+        onClick={() => {
+          const first = wordsForTopic(topicId, level)[0]
+          unlockSpeech()
+          if (first) speakWord(first.say)
+          onStudy()
+        }}
+      >
         <CutePic name="bookmark-tabs" emoji="🃏" label="認讀卡" className="mode-pic" />
         <span>
           <strong>認讀卡</strong>
@@ -250,46 +282,60 @@ function ModeScreen({
 }
 
 function StudyScreen({
+  level,
   topicId,
   showJyutping,
   onBack,
   onKnown,
 }: {
+  level: Level
   topicId: TopicId | 'all'
   showJyutping: boolean
   onBack: () => void
   onKnown: (id: string) => void
 }) {
-  const cards = useMemo(() => wordsForTopic(topicId), [topicId])
+  const cards = useMemo(() => wordsForTopic(topicId, level), [topicId, level])
   const [index, setIndex] = useState(0)
   const word = cards[index]
 
-  useEffect(() => {
-    if (word) speak(word.say)
-  }, [word])
-
   if (!word) return null
 
-  const prev = () => setIndex((value) => Math.max(0, value - 1))
+  const hear = () => {
+    unlockSpeech()
+    speakWord(word.say)
+  }
+
+  const prev = () => {
+    const nextIndex = Math.max(0, index - 1)
+    setIndex(nextIndex)
+    const prevWord = cards[nextIndex]
+    if (prevWord) speakWord(prevWord.say)
+  }
+
   const next = () => {
     onKnown(word.id)
     if (index === cards.length - 1) {
       onBack()
       return
     }
-    setIndex((value) => value + 1)
+    const nextIndex = index + 1
+    setIndex(nextIndex)
+    const nextWord = cards[nextIndex]
+    if (nextWord) speakWord(nextWord.say)
   }
 
   return (
     <section className="screen">
       <TopBar title="認讀卡" onBack={onBack} meta={`${index + 1} / ${cards.length}`} />
-      <button className="flash-card" type="button" onClick={() => speak(word.say)}>
+      <div className="flash-card">
         <CutePic name={word.pic} emoji={word.emoji} label={word.meaning} className="flash-pic" />
         <Hanzi char={word.char} size="xl" tone="cream" />
         {showJyutping && <span className="flash-jyutping">{word.jyutping}</span>}
         <span className="flash-meaning">{word.meaning}</span>
-        <span className="flash-hint">撳一下聽廣東話</span>
-      </button>
+        <button className="btn listen xl" type="button" onClick={hear}>
+          🔊 聽「{word.char}」
+        </button>
+      </div>
       <div className="pager">
         <button className="btn ghost" type="button" onClick={prev} disabled={index === 0}>
           上一張
@@ -303,24 +349,30 @@ function StudyScreen({
 }
 
 function QuizScreen({
+  level,
   topicId,
   mode,
   showJyutping,
   onExit,
   onDone,
 }: {
+  level: Level
   topicId: TopicId | 'all'
   mode: QuizMode
   showJyutping: boolean
   onExit: () => void
   onDone: (correct: number, total: number, knownIds: string[]) => void
 }) {
-  const questions = useMemo(() => buildQuestions(topicId), [topicId])
+  const questions = useMemo(
+    () => buildQuestions(topicId, level, level === 2 ? 6 : 8),
+    [topicId, level],
+  )
   const [index, setIndex] = useState(0)
   const [locked, setLocked] = useState(false)
   const [picked, setPicked] = useState<string | null>(null)
   const [score, setScore] = useState(0)
   const [known, setKnown] = useState<string[]>([])
+  const [lesson, setLesson] = useState<{ correct: Word; picked: Word } | null>(null)
   const timer = useRef<number | null>(null)
   const question = questions[index]
 
@@ -336,6 +388,18 @@ function QuizScreen({
 
   if (!question) return null
 
+  const goNext = (nextScore: number, nextKnown: string[]) => {
+    const nextIndex = index + 1
+    if (nextIndex >= questions.length) {
+      onDone(nextScore, questions.length, nextKnown)
+      return
+    }
+    setIndex(nextIndex)
+    setLocked(false)
+    setPicked(null)
+    setLesson(null)
+  }
+
   const choose = (word: Word) => {
     if (locked) return
     setPicked(word.id)
@@ -346,20 +410,25 @@ function QuizScreen({
     if (right) {
       setScore(nextScore)
       setKnown(nextKnown)
-      speak('好叻呀')
-    } else {
-      speak('再試下')
+      speak(`好叻呀。${question.correct.say}。`)
+      timer.current = window.setTimeout(() => goNext(nextScore, nextKnown), 1100)
+      return
     }
-    timer.current = window.setTimeout(() => {
-      const nextIndex = index + 1
-      if (nextIndex >= questions.length) {
-        onDone(nextScore, questions.length, nextKnown)
-        return
-      }
-      setIndex(nextIndex)
-      setLocked(false)
-      setPicked(null)
-    }, 1100)
+    setLesson({ correct: question.correct, picked: word })
+    speak(explainWrong(question.correct, word).speak)
+  }
+
+  if (lesson) {
+    return (
+      <TeachScreen
+        correct={lesson.correct}
+        picked={lesson.picked}
+        showJyutping={showJyutping}
+        progress={`${index + 1} / ${questions.length}`}
+        onExit={onExit}
+        onContinue={() => goNext(score, known)}
+      />
+    )
   }
 
   return (
@@ -371,13 +440,13 @@ function QuizScreen({
       />
       <div className="prompt">
         {mode === 'listen' ? (
-          <button className="speaker" type="button" onClick={() => speak(question.correct.say)}>
+          <button className="speaker" type="button" onClick={() => speakWord(question.correct.say)}>
             <CutePic name="speaker-high-volume" emoji="🔊" label="聽" className="speaker-pic" />
             <strong>聽下係邊個字</strong>
             <small>撳喇叭再聽一次</small>
           </button>
         ) : (
-          <div className="picture-prompt">
+          <button className="picture-prompt" type="button" onClick={() => speakWord(question.correct.say)}>
             <CutePic
               name={question.correct.pic}
               emoji={question.correct.emoji}
@@ -386,7 +455,8 @@ function QuizScreen({
             />
             <strong>{question.correct.meaning}</strong>
             {showJyutping && <small>{question.correct.jyutping}</small>}
-          </div>
+            <span className="listen-chip">🔊 聽呢個字</span>
+          </button>
         )}
       </div>
       <div className="choices">
@@ -410,6 +480,43 @@ function QuizScreen({
           )
         })}
       </div>
+    </section>
+  )
+}
+
+function TeachScreen({
+  correct,
+  picked,
+  showJyutping,
+  progress,
+  onExit,
+  onContinue,
+}: {
+  correct: Word
+  picked: Word
+  showJyutping: boolean
+  progress: string
+  onExit: () => void
+  onContinue: () => void
+}) {
+  const tip = explainWrong(correct, picked)
+  return (
+    <section className="screen teach-screen">
+      <TopBar title="記住呢個字" onBack={onExit} meta={progress} />
+      <p className="teach-kicker">你揀咗「{picked.char}」，唔啱</p>
+      <div className="teach-card">
+        <CutePic name={correct.pic} emoji={correct.emoji} label={correct.meaning} className="teach-pic" />
+        <Hanzi char={correct.char} size="xl" tone="cream" />
+        <strong className="flash-meaning">{correct.meaning}</strong>
+        {showJyutping && <span className="flash-jyutping">{correct.jyutping}</span>}
+        <p className="teach-line">{tip.line}</p>
+      </div>
+      <button className="btn listen xl" type="button" onClick={() => speakWord(correct.say)}>
+        🔊 聽「{correct.char}」
+      </button>
+      <button className="btn primary xl" type="button" onClick={onContinue}>
+        記住喇
+      </button>
     </section>
   )
 }
@@ -481,10 +588,11 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
       <div className="overlay-card">
         <h3>點樣玩</h3>
         <ol>
-          <li>先揀一個課題，例如家庭或者動物。</li>
+          <li>先揀 K2 低班或者 K3 高班，再揀課題。</li>
           <li>「聽音認字」會用廣東話讀出嚟，你再揀漢字。</li>
           <li>「睇圖認字」睇圖同意思，再揀啱嗰個字。</li>
           <li>「認讀卡」可以慢慢學，撳卡就聽到讀音。</li>
+          <li>答錯會解釋正確嗰個字，可以撳喇叭再聽一次。</li>
         </ol>
         <p>字係香港常用繁體字，讀音用廣東話。大人可以開拼音一齊睇。</p>
         <button className="btn primary" type="button" onClick={onClose}>
